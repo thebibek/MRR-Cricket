@@ -1,0 +1,231 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MRR CRICKET - Payment Dashboard</title>
+    <!-- Tailwind CSS for clean, modern UI -->
+    <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+    <!-- Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+</head>
+<body class="bg-gray-50 font-sans min-h-screen">
+
+    <div class="max-w-5xl mx-auto px-4 py-8">
+        <!-- Header -->
+        <header class="mb-8 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 border-b border-gray-200 pb-5">
+            <div>
+                <h1 class="text-3xl font-bold text-gray-900 tracking-tight flex items-center gap-2">
+                    <i data-lucide="trophy" class="text-amber-500"></i> MRR CRICKET
+                </h1>
+                <p class="text-gray-500 mt-1">Payment tracking and verification dashboard</p>
+            </div>
+            <!-- Summary Card -->
+            <div class="bg-emerald-50 border border-emerald-200 rounded-xl p-4 flex items-center gap-4 shadow-sm self-start sm:self-center">
+                <div class="bg-emerald-500 text-white p-3 rounded-lg">
+                    <i data-lucide="banknote" class="w-6 h-6"></i>
+                </div>
+                <div>
+                    <span class="text-xs font-semibold text-emerald-800 uppercase tracking-wider">Total Received</span>
+                    <p class="text-2xl font-bold text-emerald-950">12,100</p>
+                </div>
+            </div>
+        </header>
+
+        <!-- Search Bar -->
+        <div class="mb-6 relative">
+            <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-gray-400">
+                <i data-lucide="search" class="w-5 h-5"></i>
+            </div>
+            <input type="text" id="searchInput" placeholder="Search member by name..." 
+                class="w-full pl-10 pr-4 py-3 bg-white border border-gray-300 rounded-lg shadow-xs focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-gray-900 transition-all">
+        </div>
+
+        <!-- Desktop Table / Mobile List Container -->
+        <div class="bg-white rounded-xl shadow-xs border border-gray-200 overflow-hidden">
+            <!-- Desktop View -->
+            <div class="hidden md:block overflow-x-auto">
+                <table class="w-full text-left border-collapse">
+                    <thead>
+                        <tr class="bg-gray-50 border-b border-gray-200 text-xs font-semibold text-gray-600 uppercase tracking-wider">
+                            <th class="px-6 py-4 w-16 text-center">S.N.</th>
+                            <th class="px-6 py-4">Name</th>
+                            <th class="px-6 py-4">Amount</th>
+                            <th class="px-6 py-4">Status / Notes</th>
+                        </tr>
+                    </thead>
+                    <tbody id="tableBody" class="divide-y divide-gray-100 text-sm text-gray-700">
+                        <!-- JS injects rows here -->
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- Mobile View -->
+            <div id="mobileList" class="block md:hidden divide-y divide-gray-100">
+                <!-- JS injects mobile cards here -->
+            </div>
+        </div>
+    </div>
+
+    <!-- Payment Verification Modal -->
+    <div id="screenshotModal" class="fixed inset-0 bg-black/60 backdrop-blur-xs flex items-center justify-center p-4 z-50 hidden opacity-0 transition-opacity duration-200">
+        <div class="bg-white rounded-xl max-w-md w-full shadow-2xl transform scale-95 transition-transform duration-200 overflow-hidden">
+            <div class="p-6 border-b border-gray-100 flex items-center justify-between">
+                <h3 class="text-lg font-bold text-gray-900 flex items-center gap-2">
+                    <i data-lucide="shield-check" class="text-blue-500"></i> Payment Verification
+                </h3>
+                <button onclick="closeModal()" class="text-gray-400 hover:text-gray-600 p-1 rounded-lg hover:bg-gray-100 transition-colors">
+                    <i data-lucide="x" class="w-5 h-5"></i>
+                </button>
+            </div>
+            <div class="p-6 space-y-4">
+                <div>
+                    <span class="text-xs font-semibold text-gray-400 uppercase tracking-wider">Member Name</span>
+                    <p id="modalName" class="text-lg font-bold text-gray-900"></p>
+                </div>
+                <div class="flex gap-8">
+                    <div>
+                        <span class="text-xs font-semibold text-gray-400 uppercase tracking-wider">Contribution</span>
+                        <p id="modalAmount" class="text-base font-semibold text-gray-800"></p>
+                    </div>
+                    <div id="modalNoteContainer">
+                        <span class="text-xs font-semibold text-gray-400 uppercase tracking-wider">Reference</span>
+                        <p id="modalNote" class="text-sm text-gray-600 italic"></p>
+                    </div>
+                </div>
+                
+                <!-- Graphic placeholder simulating a validated screenshot look -->
+                <div class="bg-gray-50 border border-dashed border-gray-300 rounded-lg p-8 text-center flex flex-col items-center justify-center gap-2 mt-2">
+                    <i data-lucide="image" class="w-10 h-10 text-gray-400"></i>
+                    <p class="text-xs text-gray-500 font-medium">Payment screenshot attached & verified</p>
+                    <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-emerald-100 text-emerald-800 mt-1">
+                        Success Match
+                    </span>
+                </div>
+            </div>
+            <div class="p-4 bg-gray-50 border-t border-gray-100 flex justify-end">
+                <button onclick="closeModal()" class="px-4 py-2 bg-gray-900 hover:bg-gray-800 text-white text-sm font-semibold rounded-lg shadow-xs transition-colors">
+                    Done
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Real spreadsheet content dynamically mapped to JS objects[cite: 1]
+        const members = [
+            { sn: 1, name: "Bibek Chalise", amount: "1000", note: "" },
+            { sn: 2, name: "Cretesh Poudell", amount: "1000", note: "" },
+            { sn: 3, name: "Basanta Rupakheti", amount: "1000", note: "" },
+            { sn: 4, name: "Sanzieep Karki", amount: "1000", note: "" },
+            { sn: 5, name: "Dr Ashish Khadka", amount: "1000", note: "" },
+            { sn: 6, name: "bishal khadka", amount: "1000", note: "" },
+            { sn: 7, name: "Ramesh Thakulla", amount: "1000", note: "" },
+            { sn: 8, name: "Niraj Luitel", amount: "cash", note: "" },
+            { sn: 9, name: "Abinash Adhikari", amount: "cash", note: "" },
+            { sn: 10, name: "Shiva Neupane", amount: "cash", note: "" },
+            { sn: 11, name: "Dipesh Lekhak", amount: "550", note: "digamber" },
+            { sn: 12, name: "Arjun Subedi", amount: "550", note: "" },
+            { sn: 13, name: "Bhaskar Rijal", amount: "1000", note: "" },
+            { sn: 14, name: "Prabin Regmi 1", amount: "1000", note: "" },
+            { sn: 15, name: "Sagar Bhattrai", amount: "1000", note: "" },
+            { sn: 16, name: "Prabin Regmi 2", amount: "1000", note: "transfer by prabin regi" }
+        ];
+
+        function getStatusBadge(amount) {
+            if (amount.toLowerCase() === 'cash') {
+                return '<span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-amber-100 text-amber-800"><span class="w-1.5 h-1.5 mr-1.5 rounded-full bg-amber-500"></span>In-Hand Cash</span>';
+            }
+            return '<span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800"><span class="w-1.5 h-1.5 mr-1.5 rounded-full bg-blue-500"></span>Online Transfer</span>';
+        }
+
+        function renderList(filteredMembers) {
+            const tbody = document.getElementById('tableBody');
+            const mobileList = document.getElementById('mobileList');
+            
+            tbody.innerHTML = '';
+            mobileList.innerHTML = '';
+
+            filteredMembers.forEach(member => {
+                // Table Row
+                const tr = document.createElement('tr');
+                tr.className = "hover:bg-gray-50/70 transition-colors";
+                tr.innerHTML = `
+                    <td class="px-6 py-4 text-center font-medium text-gray-400">${member.sn}</td>
+                    <td class="px-6 py-4 font-semibold text-blue-600 hover:text-blue-800 cursor-pointer underline decoration-dotted" onclick="openModal(${member.sn})">
+                        ${member.name}
+                    </td>
+                    <td class="px-6 py-4 font-medium">${member.amount}</td>
+                    <td class="px-6 py-4 flex items-center justify-between gap-4">
+                        ${getStatusBadge(member.amount)}
+                        <span class="text-xs text-gray-400 italic max-w-[180px] truncate">${member.note}</span>
+                    </td>
+                `;
+                tbody.appendChild(tr);
+
+                // Mobile Card View
+                const mDiv = document.createElement('div');
+                mDiv.className = "p-4 flex justify-between items-center bg-white";
+                mDiv.innerHTML = `
+                    <div class="space-y-1">
+                        <div class="flex items-center gap-2">
+                            <span class="text-xs font-bold text-gray-400">#${member.sn}</span>
+                            <h4 class="font-bold text-blue-600 underline decoration-dotted" onclick="openModal(${member.sn})">${member.name}</h4>
+                        </div>
+                        <p class="text-xs text-gray-400 italic">${member.note || 'No additional remarks'}</p>
+                    </div>
+                    <div class="text-right space-y-1">
+                        <p class="font-bold text-gray-900">${member.amount}</p>
+                        ${getStatusBadge(member.amount)}
+                    </div>
+                `;
+                mobileList.appendChild(mDiv);
+            });
+        }
+
+        // Modal Logic
+        function openModal(sn) {
+            const member = members.find(m => m.sn === sn);
+            if (!member) return;
+
+            document.getElementById('modalName').innerText = member.name;
+            document.getElementById('modalAmount').innerText = member.amount;
+            
+            const noteContainer = document.getElementById('modalNoteContainer');
+            if (member.note) {
+                noteContainer.style.display = 'block';
+                document.getElementById('modalNote').innerText = member.note;
+            } else {
+                noteContainer.style.display = 'none';
+            }
+
+            const modal = document.getElementById('screenshotModal');
+            modal.classList.remove('hidden');
+            setTimeout(() => {
+                modal.classList.remove('opacity-0');
+                modal.firstElementChild.classList.remove('scale-95');
+            }, 10);
+        }
+
+        function closeModal() {
+            const modal = document.getElementById('screenshotModal');
+            modal.classList.add('opacity-0');
+            modal.firstElementChild.classList.add('scale-95');
+            setTimeout(() => {
+                modal.classList.add('hidden');
+            }, 200);
+        }
+
+        // Search Filter Engine
+        document.getElementById('searchInput').addEventListener('input', (e) => {
+            const val = e.target.value.toLowerCase();
+            const filtered = members.filter(m => m.name.toLowerCase().includes(val));
+            renderList(filtered);
+        });
+
+        // Initialize view
+        renderList(members);
+        lucide.createIcons();
+    </script>
+</body>
+</html>
